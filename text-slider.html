@@ -2,22 +2,27 @@
 <link rel="import" href="../core-a11y-keys/core-a11y-keys.html">
 
 <!--
-Element providing solution to no problem in particular.
+A decorator for <input type="number"> with extra keyboard interactions.
 
 ##### Example
 
-    <text-slider></text-slider>
+  <text-slider>
+    <input type="number" min="0" max="100"></input>
+  </text-slider>
 
 @element text-slider
-@blurb Element providing solution to no problem in particular.
+@blurb A decorator for <input type="number"> with extra keyboard interactions.
 @status alpha
 @homepage http://eliseosoto.github.io/text-slider
 -->
-<polymer-element name="text-slider" attributes="">
+<polymer-element name="text-slider"
+                 attributes="shiftStepFactor decimalDigits suffix">
   <template>
     <link rel="stylesheet" href="text-slider.css">
-    <core-a11y-keys target="{{input}}" keys="shift+up" on-keys-pressed="{{increment}}"></core-a11y-keys>
-    <core-a11y-keys target="{{input}}" keys="shift+down" on-keys-pressed="{{decrement}}"></core-a11y-keys>
+    <core-a11y-keys target="{{input}}" keys="shift+up"
+        on-keys-pressed="{{increment}}"></core-a11y-keys>
+    <core-a11y-keys target="{{input}}" keys="shift+down"
+        on-keys-pressed="{{decrement}}"></core-a11y-keys>
 
     <content select="input"></content>
   </template>
@@ -28,26 +33,90 @@ Element providing solution to no problem in particular.
        */
       input: null,
 
+      /**
+       * @attribute shiftStepFactor
+       * @type number
+       * @default 10
+       */
       shiftStepFactor: 10,
+
+      /**
+       * @attribute decimalDigits
+       * @type number
+       * @default 2
+       */
+      decimalDigits: 2,
+
+      /**
+       * @attribute suffix
+       * @type string
+       * @default ''
+       */
+      suffix: '',
 
       attached: function() {
         this.input = this.getElementsByTagName('input')[0];
       },
 
-      ready: function() {
-        // Ready is a lifecycle callback.
-        // You can do setup work in here.
-        // More info: http://www.polymer-project.org/docs/polymer/polymer.html#lifecyclemethods
+      sanitizeNumericValue: function() {
+        var currentValue = this.input.valueAsNumber;
+
+        // If the input value is NaN then the browser behavior is to set the
+        // specified min or 0, in that order.
+        if (isNaN(currentValue)) {
+          var min = parseFloat(this.input.getAttribute('min'));
+          if (isNaN(min)) {
+            min = 0;
+          }
+          currentValue = min;
+          this.input.value = currentValue.toString();
+        }
+
+        return currentValue;
+      },
+
+      maybeChangeValue: function(newValue) {
+        var oldValue = this.input.value;
+
+        // Restrict newValue to the min/max boundaries if any.
+        var newValueFloat = parseFloat(newValue);
+        var max = parseFloat(this.input.getAttribute('max'));
+        var min = parseFloat(this.input.getAttribute('min'));
+        if (newValueFloat < min) {
+          newValueFloat = min;
+        } else if (newValueFloat > max) {
+          newValueFloat = max;
+        }
+
+        // Round new value to the specified number of decimal digits and remove
+        // trailing zeroes.
+        var newValueStr = parseFloat(newValueFloat.toFixed(this.decimalDigits))
+            .toString();
+
+        if (this.input.value == newValueStr) {
+          return;
+        }
+        this.input.value = newValueStr;
+
+        if (!this.input.checkValidity()) {
+          this.input.value = oldValue;
+        } else {
+          this.inputValue_ = newValueStr;
+        }
       },
 
       increment: function() {
         var step = parseFloat(this.input.step) || 1;
-        this.input.valueAsNumber += step * this.shiftStepFactor;
+        var newValue = this.sanitizeNumericValue() +
+            (step * this.shiftStepFactor);
+        this.maybeChangeValue(newValue);
       },
 
       decrement: function() {
         var step = parseFloat(this.input.step) || 1;
-        this.input.valueAsNumber -= step * this.shiftStepFactor;
+        var newValue = this.sanitizeNumericValue() -
+            (step * this.shiftStepFactor);
+        this.maybeChangeValue(newValue);
       }
     });
   </script>

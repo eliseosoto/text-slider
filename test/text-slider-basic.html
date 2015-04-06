@@ -18,14 +18,23 @@
     <input type="number" min="0" max="100"></input>
   </text-slider>
 
+  <text-slider id="min1">
+    <input type="number" min="1" max="100"></input>
+  </text-slider>
+
   <script>
     var myEl = document.getElementById('fixture');
+    var min1El = document.getElementById('min1');
 
     suite('<text-slider>', function() {
-
       test('must have an input element', function() {
         assert.instanceOf(myEl.input, HTMLInputElement);
       });
+
+      test('should use min value or 0', function() {
+        assert.equal('0', myEl.sanitizeNumericValue());
+        assert.equal('1', min1El.sanitizeNumericValue());
+      })
     });
   </script>
 
