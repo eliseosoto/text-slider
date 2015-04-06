@@ -1,0 +1,17 @@
+{
+  "name": "text-slider",
+  "version": "0.0.0",
+  "keywords": [
+    "seed",
+    "polymer",
+    "web-components"
+  ],
+  "main": "text-slider.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^0.5.5",
+    "core-a11y-keys": "Polymer/core-a11y-keys#^0.5.5"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^2.2.3"
+  }
+}
